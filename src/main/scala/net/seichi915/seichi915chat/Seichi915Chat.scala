@@ -1,7 +1,6 @@
 package net.seichi915.seichi915chat
 
 import java.util.concurrent.TimeUnit
-
 import net.md_5.bungee.api.connection.ProxiedPlayer
 import net.md_5.bungee.api.plugin.Plugin
 import net.seichi915.seichi915chat.antispam.AntiSpam
@@ -12,6 +11,8 @@ import net.seichi915.seichi915chat.playerdata.PlayerData
 import net.seichi915.seichi915chat.task._
 
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success}
 
 object Seichi915Chat {
   var instance: Seichi915Chat = _
@@ -58,6 +59,19 @@ class Seichi915Chat extends Plugin {
   }
 
   override def onDisable(): Unit = {
+    Seichi915Chat.playerDataMap.foreach {
+      case (proxiedPlayer: ProxiedPlayer, playerData: PlayerData) =>
+        playerData.save(proxiedPlayer) onComplete {
+          case Success(_) =>
+            Seichi915Chat.playerDataMap.remove(proxiedPlayer)
+          case Failure(exception) =>
+            exception.printStackTrace()
+            Seichi915Chat.instance.getLogger
+              .warning(s"${proxiedPlayer.getName}さんのプレイヤーデーターのセーブに失敗しました。")
+            Seichi915Chat.playerDataMap.remove(proxiedPlayer)
+        }
+    }
+
     getLogger.info("seichi915Chatが無効になりました。")
   }
 }

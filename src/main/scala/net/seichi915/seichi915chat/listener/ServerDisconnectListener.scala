@@ -22,11 +22,12 @@ class ServerDisconnectListener extends Listener {
       })
       .save(event.getPlayer) onComplete {
       case Success(_) =>
+        Seichi915Chat.playerDataMap.remove(event.getPlayer)
       case Failure(exception) =>
         exception.printStackTrace()
         Seichi915Chat.instance.getLogger
           .warning(s"${event.getPlayer}さんのプレイヤーデータのセーブに失敗しました。")
+        Seichi915Chat.playerDataMap.remove(event.getPlayer)
     }
-    Seichi915Chat.playerDataMap.remove(event.getPlayer)
   }
 }
