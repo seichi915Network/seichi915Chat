@@ -20,6 +20,10 @@ object Database {
     "",
     "")
 
+  GlobalSettings.loggingSQLAndTime = LoggingSQLAndTimeSettings(
+    enabled = false
+  )
+
   def saveDefaultDatabase: Boolean =
     try {
       if (!Seichi915Chat.instance.getDataFolder.exists())
