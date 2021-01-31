@@ -44,7 +44,6 @@ object RomajiToHiraganaConverter {
     "ro" -> "ろ",
     "wa" -> "わ",
     "wo" -> "を",
-    "n" -> "ん",
     "yi" -> "い",
     "wu" -> "う",
     "whu" -> "う",
@@ -273,8 +272,6 @@ object RomajiToHiraganaConverter {
     "ryo" -> "りょ",
     "lwa" -> "ゎ",
     "xwa" -> "ゎ",
-    "xn" -> "ん",
-    "n'" -> "ん",
     "-" -> "ー",
     "," -> "、",
     "[" -> "「",
@@ -292,6 +289,9 @@ object RomajiToHiraganaConverter {
   def convert(romaji: String): String = {
     val replaced =
       romaji
+        .replaceAll("nn", "ん")
+        .replaceAll("xn", "ん")
+        .replaceAll("n'", "ん")
         .replaceAll("na", "な")
         .replaceAll("ni", "に")
         .replaceAll("nu", "ぬ")
@@ -302,7 +302,7 @@ object RomajiToHiraganaConverter {
         .replaceAll("nyu", "にゅ")
         .replaceAll("nye", "にぇ")
         .replaceAll("nyo", "にょ")
-        .replaceAll("nn", "ん")
+        .replaceAll("n", "ん")
     StringUtils.replaceEach(replaced,
                             romajiAndHiraganaMap.keySet.toArray[String],
                             romajiAndHiraganaMap.values.toArray[String])
