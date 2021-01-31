@@ -15,6 +15,7 @@ libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.7.2",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "commons-lang" % "commons-lang" % "2.6",
+  "commons-codec" % "commons-codec" % "1.10",
   "org.scalatest" %% "scalatest" % "3.2.2" % "test"
 )
 
