@@ -15,6 +15,5 @@ class RomajiToHiraganaConverterSpec extends AnyFlatSpec with Diagrams {
     assert(RomajiToHiraganaConverter.convert("giltuto") === "ぎっと")
     assert(RomajiToHiraganaConverter.convert("gitto") === "ぎっと")
     assert(RomajiToHiraganaConverter.convert("a-,[]") === "あー、「」")
-    assert(RomajiToHiraganaConverter.convert("seichi") === "整地")
   }
 }
