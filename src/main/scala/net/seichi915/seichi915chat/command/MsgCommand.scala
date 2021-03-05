@@ -1,5 +1,6 @@
 package net.seichi915.seichi915chat.command
 
+import cats.effect.IO
 import net.md_5.bungee.api.chat.hover.content.Text
 import net.md_5.bungee.api.{ChatColor, CommandSender}
 import net.md_5.bungee.api.chat.{
@@ -17,10 +18,8 @@ import net.seichi915.seichi915chat.converter.ChatConverter
 import net.seichi915.seichi915chat.util.Implicits._
 import net.seichi915.seichi915chat.util.Util
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
-import scala.util.{Failure, Success}
 
 class MsgCommand extends Command("msg", null, "tell", "w") {
   override def execute(sender: CommandSender, args: Array[String]): Unit = {
@@ -105,55 +104,57 @@ class MsgCommand extends Command("msg", null, "tell", "w") {
       ChatColor.stripColor(optimizedMessage).matches("[ \\uFF61-\\uFF9F]+")
     val isURL = optimizedMessage.matches(
       "(https?|ftp)(:\\/\\/[-_.!~*\\'()a-zA-Z0-9;\\/?:\\@&=+\\$,%#]+)")
-    Future {
-      var processed = Array[BaseComponent]()
-      if (optimizedMessage.charAt(0) != '#' && playerData.isJapaneseConversionEnabled && !containsJapanese && !isURL) {
-        val converted = ChatConverter.convert(optimizedMessage)
-        processed = new ComponentBuilder(
-          Util.createPrivateChatMessage(player,
-                                        destination,
-                                        converted,
-                                        optimizedMessage)).create()
-      } else {
-        if (isURL) {
-          val componentBuilder =
-            new ComponentBuilder(
-              Util.createPrivateChatPrefix(player, destination))
-              .append(
-                s"${ChatColor.YELLOW}${ChatColor.UNDERLINE}$optimizedMessage")
-              .event(
-                new HoverEvent(
-                  HoverEvent.Action.SHOW_TEXT,
-                  new Text(s"クリックで $optimizedMessage にアクセスします。")
-                )
-              )
-              .event(new ClickEvent(ClickEvent.Action.OPEN_URL,
-                                    optimizedMessage))
-          processed = componentBuilder.create()
-        } else {
+    val task = IO {
+      try {
+        var processed = Array[BaseComponent]()
+        if (optimizedMessage.charAt(0) != '#' && playerData.isJapaneseConversionEnabled && !containsJapanese && !isURL) {
+          val converted = ChatConverter.convert(optimizedMessage)
           processed = new ComponentBuilder(
-            Util.createPrivateChatMessage(
-              player,
-              destination,
-              ChatColor.translateAlternateColorCodes(
-                '&',
-                if (optimizedMessage.startsWith("#"))
-                  optimizedMessage.replaceFirst("#", "")
-                else optimizedMessage)
-            )).create()
+            Util.createPrivateChatMessage(player,
+                                          destination,
+                                          converted,
+                                          optimizedMessage)).create()
+        } else {
+          if (isURL) {
+            val componentBuilder =
+              new ComponentBuilder(
+                Util.createPrivateChatPrefix(player, destination))
+                .append(
+                  s"${ChatColor.YELLOW}${ChatColor.UNDERLINE}$optimizedMessage")
+                .event(
+                  new HoverEvent(
+                    HoverEvent.Action.SHOW_TEXT,
+                    new Text(s"クリックで $optimizedMessage にアクセスします。")
+                  )
+                )
+                .event(
+                  new ClickEvent(ClickEvent.Action.OPEN_URL, optimizedMessage))
+            processed = componentBuilder.create()
+          } else {
+            processed = new ComponentBuilder(
+              Util.createPrivateChatMessage(
+                player,
+                destination,
+                ChatColor.translateAlternateColorCodes(
+                  '&',
+                  if (optimizedMessage.startsWith("#"))
+                    optimizedMessage.replaceFirst("#", "")
+                  else optimizedMessage)
+              )).create()
+          }
         }
-      }
-      processed
-    } onComplete {
-      case Success(value) =>
-        player.sendMessage(value: _*)
-        destination.sendMessage(value: _*)
+        player.sendMessage(processed: _*)
+        destination.sendMessage(processed: _*)
         AntiSpam.startSpeakIntervalTimer(player)
         AntiSpam.startSameRemarkIntervalTimer(player, optimizedMessage)
-      case Failure(exception) =>
-        exception.printStackTrace()
-        player.sendMessage(
-          TextComponent.fromLegacyText("チャットの処理に失敗しました。".toErrorMessage): _*)
+      } catch {
+        case e: Exception =>
+          e.printStackTrace()
+          player.sendMessage(
+            TextComponent.fromLegacyText("チャットの処理に失敗しました。".toErrorMessage): _*)
+      }
     }
+    val contextShift = IO.contextShift(ExecutionContext.global)
+    IO.shift(contextShift).flatMap(_ => task).unsafeRunAsyncAndForget()
   }
 }

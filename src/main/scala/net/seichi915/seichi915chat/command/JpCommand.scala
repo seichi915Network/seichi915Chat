@@ -1,14 +1,14 @@
 package net.seichi915.seichi915chat.command
 
-import java.lang
-import java.util.Collections
-
 import net.md_5.bungee.api.CommandSender
 import net.md_5.bungee.api.chat.TextComponent
 import net.md_5.bungee.api.connection.ProxiedPlayer
 import net.md_5.bungee.api.plugin.{Command, TabExecutor}
 import net.seichi915.seichi915chat.Seichi915Chat
 import net.seichi915.seichi915chat.util.Implicits._
+
+import java.lang
+import java.util.Collections
 
 class JpCommand extends Command("jp") with TabExecutor {
   override def execute(sender: CommandSender, args: Array[String]): Unit = {

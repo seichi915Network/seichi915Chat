@@ -1,11 +1,12 @@
 package net.seichi915.seichi915chat.converter
 
-import java.io.{BufferedReader, InputStreamReader}
-import java.net.{HttpURLConnection, URL}
-import java.nio.charset.Charset
 import com.google.common.io.CharStreams
 import com.google.gson.{Gson, JsonArray}
 import org.apache.commons.codec.net.URLCodec
+
+import java.io.{BufferedReader, InputStreamReader}
+import java.net.{HttpURLConnection, URL}
+import java.nio.charset.Charset
 
 object Converter {
   private val googleIMEURL: String =

@@ -1,8 +1,5 @@
 package net.seichi915.seichi915chat.command
 
-import java.util.Collections
-import java.{lang, util}
-
 import net.md_5.bungee.api.CommandSender
 import net.md_5.bungee.api.chat.TextComponent
 import net.md_5.bungee.api.connection.ProxiedPlayer
@@ -11,6 +8,8 @@ import net.seichi915.seichi915chat.Seichi915Chat
 import net.seichi915.seichi915chat.util.Implicits._
 import org.bukkit.util.StringUtil
 
+import java.util.Collections
+import java.{lang, util}
 import scala.jdk.CollectionConverters._
 
 class BlockCommand extends Command("block") with TabExecutor {

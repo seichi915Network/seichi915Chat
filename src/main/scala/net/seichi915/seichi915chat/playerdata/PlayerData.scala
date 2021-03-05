@@ -1,11 +1,9 @@
 package net.seichi915.seichi915chat.playerdata
 
-import java.util.UUID
-
 import net.md_5.bungee.api.connection.ProxiedPlayer
 import net.seichi915.seichi915chat.database.Database
 
-import scala.concurrent.Future
+import java.util.UUID
 
 case class PlayerData(var japaneseConversionEnabled: Boolean,
                       var blockingUUIDList: Set[UUID]) {
@@ -19,6 +17,6 @@ case class PlayerData(var japaneseConversionEnabled: Boolean,
   def setBlockingUUIDList(uuidList: Set[UUID]): Unit =
     blockingUUIDList = uuidList
 
-  def save(proxiedPlayer: ProxiedPlayer): Future[Unit] =
+  def save(proxiedPlayer: ProxiedPlayer): Unit =
     Database.savePlayerData(proxiedPlayer, this)
 }

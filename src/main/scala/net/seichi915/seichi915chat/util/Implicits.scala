@@ -2,20 +2,8 @@ package net.seichi915.seichi915chat.util
 
 import net.md_5.bungee.api.{ChatColor, CommandSender}
 import net.md_5.bungee.api.connection.ProxiedPlayer
-import net.seichi915.seichi915chat.database.Database
-import net.seichi915.seichi915chat.playerdata.PlayerData
-
-import scala.concurrent.Future
 
 object Implicits {
-  implicit class ProxiedPlayerOps(proxiedPlayer: ProxiedPlayer) {
-    def getPlayerData: Future[Option[PlayerData]] =
-      Database.getPlayerData(proxiedPlayer)
-
-    def createNewPlayerData: Future[Unit] =
-      Database.createNewPlayerData(proxiedPlayer)
-  }
-
   implicit class StringOps(string: String) {
     def toNormalMessage: String =
       s"${ChatColor.AQUA}[${ChatColor.WHITE}seichi915Chat${ChatColor.AQUA}]${ChatColor.RESET} $string"

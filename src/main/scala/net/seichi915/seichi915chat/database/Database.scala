@@ -1,16 +1,13 @@
 package net.seichi915.seichi915chat.database
 
-import java.io.{File, FileOutputStream}
-import java.util.UUID
-
 import net.md_5.bungee.api.connection.ProxiedPlayer
 import net.seichi915.seichi915chat.Seichi915Chat
 import net.seichi915.seichi915chat.playerdata.PlayerData
 import net.seichi915.seichi915chat.util.Implicits._
 import scalikejdbc._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import java.io.{File, FileOutputStream}
+import java.util.UUID
 
 object Database {
   Class.forName("org.sqlite.JDBC")
@@ -50,45 +47,40 @@ object Database {
         false
     }
 
-  def getPlayerData(proxiedPlayer: ProxiedPlayer): Future[Option[PlayerData]] =
-    Future {
-      val playerDataList = DB readOnly { implicit session =>
-        sql"SELECT japanese_conversion_enabled, blocking_uuid_list FROM playerdata WHERE uuid = ${proxiedPlayer.getUniqueId}"
-          .map(resultSet =>
-            PlayerData(
-              resultSet.boolean("japanese_conversion_enabled"),
-              if (resultSet.string("blocking_uuid_list").isEmpty) Set()
-              else
-                resultSet
-                  .string("blocking_uuid_list")
-                  .split(",")
-                  .map(UUID.fromString)
-                  .toSet
-          ))
-          .list()
-          .apply()
-      }
-      playerDataList.headOption
+  def getPlayerData(proxiedPlayer: ProxiedPlayer): Option[PlayerData] =
+    DB readOnly { implicit session =>
+      sql"SELECT japanese_conversion_enabled, blocking_uuid_list FROM playerdata WHERE uuid = ${proxiedPlayer.getUniqueId}"
+        .map(resultSet =>
+          PlayerData(
+            resultSet.boolean("japanese_conversion_enabled"),
+            if (resultSet.string("blocking_uuid_list").isEmpty) Set()
+            else
+              resultSet
+                .string("blocking_uuid_list")
+                .split(",")
+                .map(UUID.fromString)
+                .toSet
+        ))
+        .list()
+        .apply()
+        .headOption
     }
 
-  def createNewPlayerData(proxiedPlayer: ProxiedPlayer): Future[Unit] =
-    Future {
-      DB localTx { implicit session =>
-        sql"INSERT INTO playerdata (uuid, japanese_conversion_enabled, blocking_uuid_list) VALUES (${proxiedPlayer.getUniqueId}, 1, '')"
-          .update()
-          .apply()
-      }
+  def createNewPlayerData(proxiedPlayer: ProxiedPlayer): Unit =
+    DB localTx { implicit session =>
+      sql"INSERT INTO playerdata (uuid, japanese_conversion_enabled, blocking_uuid_list) VALUES (${proxiedPlayer.getUniqueId}, 1, '')"
+        .update()
+        .apply()
     }
 
   def savePlayerData(proxiedPlayer: ProxiedPlayer,
-                     playerData: PlayerData): Future[Unit] = Future {
+                     playerData: PlayerData): Unit =
     DB localTx { implicit session =>
       sql"UPDATE playerdata SET japanese_conversion_enabled=${playerData.isJapaneseConversionEnabled.toInt}, blocking_uuid_list=${if (playerData.getBlockingUUIDList.isEmpty) ""
       else playerData.getBlockingUUIDList.mkString(",")} WHERE uuid = ${proxiedPlayer.getUniqueId}"
         .update()
         .apply()
     }
-  }
 
   def getFromDictionary(original: String): Option[String] = {
     val convertedList = DB readOnly { implicit session =>
