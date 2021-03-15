@@ -12,7 +12,11 @@ import java.util.UUID
 object Database {
   Class.forName("org.sqlite.JDBC")
 
-  ConnectionPool.singleton(
+  private val dbName =
+    Seichi915Chat.instance.getDescription.getName.toLowerCase
+
+  ConnectionPool.add(
+    dbName,
     s"jdbc:sqlite:${Seichi915Chat.instance.getDataFolder.getAbsolutePath}/database.db",
     "",
     "")
@@ -48,7 +52,7 @@ object Database {
     }
 
   def getPlayerData(proxiedPlayer: ProxiedPlayer): Option[PlayerData] =
-    DB readOnly { implicit session =>
+    NamedDB(dbName) localTx { implicit session =>
       sql"SELECT japanese_conversion_enabled, blocking_uuid_list FROM playerdata WHERE uuid = ${proxiedPlayer.getUniqueId}"
         .map(resultSet =>
           PlayerData(
@@ -67,7 +71,7 @@ object Database {
     }
 
   def createNewPlayerData(proxiedPlayer: ProxiedPlayer): Unit =
-    DB localTx { implicit session =>
+    NamedDB(dbName) localTx { implicit session =>
       sql"INSERT INTO playerdata (uuid, japanese_conversion_enabled, blocking_uuid_list) VALUES (${proxiedPlayer.getUniqueId}, 1, '')"
         .update()
         .apply()
@@ -75,28 +79,26 @@ object Database {
 
   def savePlayerData(proxiedPlayer: ProxiedPlayer,
                      playerData: PlayerData): Unit =
-    DB localTx { implicit session =>
+    NamedDB(dbName) localTx { implicit session =>
       sql"UPDATE playerdata SET japanese_conversion_enabled=${playerData.isJapaneseConversionEnabled.toInt}, blocking_uuid_list=${if (playerData.getBlockingUUIDList.isEmpty) ""
       else playerData.getBlockingUUIDList.mkString(",")} WHERE uuid = ${proxiedPlayer.getUniqueId}"
         .update()
         .apply()
     }
 
-  def getFromDictionary(original: String): Option[String] = {
-    val convertedList = DB readOnly { implicit session =>
+  def getFromDictionary(original: String): Option[String] =
+    NamedDB(dbName) localTx { implicit session =>
       sql"SELECT converted FROM dictionary WHERE original = $original"
         .map(_.string("converted"))
         .list()
         .apply()
+        .headOption
     }
-    convertedList.headOption
-  }
 
-  def addToDictionary(original: String, converted: String): Unit = {
-    DB localTx { implicit session =>
+  def addToDictionary(original: String, converted: String): Unit =
+    NamedDB(dbName) localTx { implicit session =>
       sql"INSERT INTO dictionary (original, converted) VALUES ($original, $converted)"
         .update()
         .apply()
     }
-  }
 }
